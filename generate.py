@@ -22,7 +22,7 @@ DEFAULT_ENTRY_TPL = """<tr>
 # Default template for each directory displayed. Variables used are {name}, {link} and {size} which
 # has amount of files inside the directory.
 DEFAULT_DIR_TPL = """<tr>
-    <td class="directory"><a href="{link}">{name}<a></td>
+    <td class="directory"><a href="{link}">{name}</a></td>
     <td class="size">{size} files</td>
 </tr>"""
 
@@ -40,6 +40,7 @@ DEFAULT_BODY_TPL = """<table id="listing">
 BASE_TPL = """<!DOCTYPE html>
 <html>
 <head>
+    <meta charset="utf-8">
     <title>{title}</title>
     <style>{style}</style>
     <script>{script}</script>
