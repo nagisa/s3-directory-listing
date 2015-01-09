@@ -1,0 +1,24 @@
+Static S3 directory listing generator
+
+Generates static directory listings for Amazon S3 buckets. This will help to save some ¢ if your
+bucket is not too big (1 LIST call per 1000 items in the bucket if I recall correctly), you have or
+want to have public directory listings and expect them to be used more than you update your bucket.
+
+i.e. This works if you update your bucket with nightly compiler releases and you expect more than 0
+visits per day to the listing.
+
+This doesn’t work if you update your bucket every minute with 10s of thousands of user image
+uploads and want to have up-to-date directory listing too.
+
+Currently generates listings for a single bucket only.
+
+config.toml contains all switches you can pull and all the buttons you can push to change how this
+thing works. Each switch or button is self-documenting or is documented.
+
+Requires:
+
+* Python >3.2, I think
+* boto (from pypi) (pip install boto)
+* toml (from pypi) (pip install toml)
+
+Also run generator.py --help
