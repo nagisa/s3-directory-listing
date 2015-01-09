@@ -155,7 +155,7 @@ def generate_output(tree, directory=''):
             continue
         fmt = {
             'name': ndir,
-            'link': base_url + '/'.join([path.replace(os.sep, '/'), 'index.html']),
+            'link': base_url + '/'.join(['', path.replace(os.sep, '/'), 'index.html']),
             'size': dirsize
         }
         rows.append(dirtpl.format(**fmt))
@@ -165,7 +165,7 @@ def generate_output(tree, directory=''):
         if f['size'] == 0 and not config.get('output', {}).get('list_zero_sized'):
             continue
         if directory:
-            url = base_url + '/'.join([directory.replace(os.sep, '/'), f['name']])
+            url = base_url + '/'.join(['', directory.replace(os.sep, '/'), f['name']])
         else:
             url = base_url + f['name']
 
