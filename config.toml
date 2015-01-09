@@ -1,19 +1,26 @@
-[general]
-list_buckets = true # All configured buckets are listed by their name in the top-level index.html
-                    # If false all configured buckets roots will be output instead.
+[bucket]
+# Must be specified:
+name   = "bucketname"
+region = "us-west-1"
+access_key = "xxxxyyyy" # Can alternatively be defined through AWS_ACCESS_KEY_ID environment
+                        # variable
+secret_key = "xxxxyyyy" # Can alternatively be defined through AWS_SECRET_ACCESS_KEY
+                        # environment variable
 
+# Optional (default values listed):
+prefix = ""            # Only files with this prefix will be listed;
+path_separator = "/"   # Specify, if anything other than / is used to denote path hierarchy.
+                       # \ is common on windows for example;
+base_url = "" # Base URL for links. Example values
+              # * `https://bucketname.s3.amazonaws.com/`
+              # * `https://static.example.com/`.
+              # Defaults to empty string and links will be relative rather
+              # than absolute.
 
-[buckets]
-    [buckets.nightlies]     # buckets.<aws bucket name>
-    region = "us-west-1"    # Must be specified
-    access_key = "xxxxyyyy" # Can alternatively be defined through AWS_ACCESS_KEY_ID environment
-                            # variable, but not on per-bucket basis
-    secret_key = "xxxxyyyy" # Can alternatively be defined through AWS_SECRET_ACCESS_KEY
-                            # environment variable, but not on per-bucket basis
-
-    # Following are optional with default values specified
-    prefix = ""            # Only files with this prefix will be listed
-
-    [output]
-    # domain = "localhost"         # Will be used instead of amazon bucket URI if specified
-    # domain_root_directory = "/"  # URIs can be joined differently
+[output]
+extra_head = ""                   # Extra HTML to be included into <head>.
+list_zero_sized = false           # List files with 0 Size. Generally useless, since it also lists
+                                  # directories… i think?
+# entry_tpl = DEFAULT_ENTRY_TPL   # Change HTML output for each file row;
+# directory_tpl = DEFAULT_DIR_TPL # Change HTML output for directories;
+# body_tpl = DEFAULT_BODY_TPL     # Change HTML output for body;
