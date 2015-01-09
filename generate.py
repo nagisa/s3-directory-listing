@@ -95,7 +95,9 @@ def collect_files(iterator):
     ret = emptydir()
     pathsep = config.get('bucket', {}).get('path_separator', '/')
     for f in iterator:
-        path = f.name.split(pathsep).reverse()
+        if f.name is None:
+            continue
+        path = list(reversed(f.name.split(pathsep)))
         currdir = ret
         while True:
             component = path.pop()
@@ -113,7 +115,7 @@ def collect_files(iterator):
                 # Directory component
                 currdir = currdir[1][component]
 
-    return (files, directories)
+    return ret
 
 
 def humansize(size):
