@@ -221,8 +221,6 @@ if __name__ == "__main__":
     if region is None:
         panic("Region is not specified or is invalid. Valid regions are {}"
               .format(", ".join(regions.keys())))
-    if akey is None or skey is None:
-        panic("access_key or secret_key is not specified!")
     connection = region.connect(aws_access_key_id=akey, aws_secret_access_key=skey)
     bucket = connection.lookup(name)
     if bucket is None:
