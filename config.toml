@@ -1,0 +1,19 @@
+[general]
+list_buckets = true # All configured buckets are listed by their name in the top-level index.html
+                    # If false all configured buckets roots will be output instead.
+
+
+[buckets]
+    [buckets.nightlies]     # buckets.<aws bucket name>
+    region = "us-west-1"    # Must be specified
+    access_key = "xxxxyyyy" # Can alternatively be defined through AWS_ACCESS_KEY_ID environment
+                            # variable, but not on per-bucket basis
+    secret_key = "xxxxyyyy" # Can alternatively be defined through AWS_SECRET_ACCESS_KEY
+                            # environment variable, but not on per-bucket basis
+
+    # Following are optional with default values specified
+    prefix = ""            # Only files with this prefix will be listed
+
+    [output]
+    # domain = "localhost"         # Will be used instead of amazon bucket URI if specified
+    # domain_root_directory = "/"  # URIs can be joined differently
