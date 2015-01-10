@@ -14,7 +14,7 @@ import toml
 # Default template for each file. Variables used are {name}, {link}, {size}, {humansize}, {mod}
 # (mod accepts date formating options, see python reference), {storage} and {etag}.
 DEFAULT_ENTRY_TPL = """<tr>
-    <td class="filename"><a href="{link}">{name}<a></td>
+    <td class="filename"><a href="{link}">{name}</a></td>
     <td class="size">{humansize}</td>
     <td class="modification">{mdate:%Y-%m-%d %H:%M}</td>
 </tr>"""
