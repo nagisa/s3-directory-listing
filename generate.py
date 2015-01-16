@@ -157,7 +157,7 @@ def generate_output(tree, directory=''):
         if dirsize == 0 and skipzero:
             continue
         fmt = {
-            'name': ndir,
+            'name': ndir + '/',
             'link': base_url + '/'.join(['', path.replace(os.sep, '/'), 'index.html']),
             'size': dirsize
         }
