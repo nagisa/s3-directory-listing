@@ -43,3 +43,4 @@ delimiter = "\t"
 file_fields = ["path",            # List of file fields to output
                "size",
                "mdate"]
+filename = "index.txt"            # Output filename

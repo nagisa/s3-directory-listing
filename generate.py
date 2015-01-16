@@ -248,9 +248,10 @@ class TxtGenerator(object):
         self.base_url = config.get('bucket', {}).get('base_url', '')
         self.delimiter = txtconfig.get('delimiter', '\t')
         self.file_fields = txtconfig.get('file_fields', ['path', 'size', 'mdate'])
+        self.filename = txtconfig.get('filename', 'index.txt')
 
     def run(self, tree):
-        (output_dir, output_file) = get_output('', 'index.txt')
+        (output_dir, output_file) = get_output('', self.filename)
         with open(output_file, 'w') as f:
             if self.delimiter == '\t':
                 writer = csv.writer(f, dialect='excel-tab')
