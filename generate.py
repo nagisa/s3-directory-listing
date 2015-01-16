@@ -145,8 +145,10 @@ def generate_output(tree, directory=''):
     rowtpl = config.get('output', {}).get('entry_tpl', DEFAULT_ENTRY_TPL)
     dirtpl = config.get('output', {}).get('directory_tpl', DEFAULT_DIR_TPL)
     bodytpl = config.get('output', {}).get('body_tpl', DEFAULT_BODY_TPL)
-    skipzero = not config.get('output', {}).get('list_zero_sized')
+    skipzero = not bool(config.get('output', {}).get('list_zero_sized', False))
     base_url = config.get('bucket', {}).get('base_url', '')
+    file_sort_key = config.get('output', {}).get('file_sort_key', 'name')
+    reverse_files = bool(config.get('output', {}).get('reverse_files', False))
 
     # Generate directory list (as well as listings for deeper directories)
     for ndir, tree in sorted(directories.items(), key=lambda x: x[0]):
@@ -162,7 +164,9 @@ def generate_output(tree, directory=''):
         rows.append(dirtpl.format(**fmt))
 
     # Generate file list
-    for f in sorted(files, key=lambda x: x['mdate']):
+    fs = sorted(files, key=lambda x: x[file_sort_key])
+    fs = fs if not reverse_files else reversed(fs)
+    for f in fs:
         if f['size'] == 0 and not config.get('output', {}).get('list_zero_sized'):
             continue
         if directory:

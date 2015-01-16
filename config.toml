@@ -22,6 +22,9 @@ base_url = "" # Base URL for links. Example values
 extra_head = ""                   # Extra HTML to be included into <head>.
 list_zero_sized = false           # List files with 0 Size. Generally useless, since it also lists
                                   # directories… i think?
+file_sort_key = "name"            # Sort by the key. Valid (meaningful) values: 'name', 'size',
+                                  # 'mdate'.
+reverse_files = false             # Reverse the order of files
 # entry_tpl = DEFAULT_ENTRY_TPL   # Change HTML output for each file row;
 # directory_tpl = DEFAULT_DIR_TPL # Change HTML output for directories;
 # body_tpl = DEFAULT_BODY_TPL     # Change HTML output for body;
