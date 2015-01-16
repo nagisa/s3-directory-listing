@@ -4,6 +4,7 @@ import sys
 import argparse
 import copy
 import json
+import csv
 from collections import defaultdict
 from datetime import datetime
 
@@ -228,7 +229,7 @@ class JsonGenerator(object):
             output['ds'].append({
                 'name': dirname,
                 'index_link': file_url(self.base_url, path, 'index.html'),
-                'children': self._run(children)
+                'children': self._run(children, path)
             })
         for f in files:
             output['fs'].append({
@@ -242,12 +243,37 @@ class JsonGenerator(object):
         return output
 
 
-class TSVGenerator(object):
-    def __init__(self, tsvconfig={}):
+class TxtGenerator(object):
+    def __init__(self, txtconfig={}):
         self.base_url = config.get('bucket', {}).get('base_url', '')
+        self.delimiter = txtconfig.get('delimiter', '\t')
+        self.file_fields = txtconfig.get('file_fields', ['path', 'size', 'mdate'])
 
     def run(self, tree):
-        pass
+        (output_dir, output_file) = get_output('', 'index.txt')
+        with open(output_file, 'w') as f:
+            if self.delimiter == '\t':
+                writer = csv.writer(f, dialect='excel-tab')
+            else:
+                writer = csv.writer(f, delimiter=self.delimiter)
+            self._run(tree, writer)
+
+    def _run(self, tree, writer, directory=''):
+        files, directories = tree
+        for f in files:
+            vals = {
+                'name': f['name'],
+                'path': file_url('', directory, f['name']),
+                'link': file_url(self.base_url, directory, f['name']),
+                'size': f['size'],
+                'etag': f['etag'],
+                'storage': f['storage'],
+                'mdate': f['mdate'].isoformat()
+            }
+            writer.writerow([vals[f] for f in self.file_fields])
+        for dirname, children in directories.items():
+            path = os.path.join(directory, dirname)
+            self._run(children, writer, path)
 
 
 if __name__ == "__main__":
@@ -292,7 +318,8 @@ if __name__ == "__main__":
     outputs = config.get('output', {})
     targets = {
         'html': HtmlGenerator,
-        'json': JsonGenerator
+        'json': JsonGenerator,
+        'txt': TxtGenerator
     }
     for name in outputs.keys():
         tp = config['output'][name].get('type', None)
