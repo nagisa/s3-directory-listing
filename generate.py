@@ -3,6 +3,7 @@ import os.path
 import sys
 import argparse
 import copy
+import json
 from collections import defaultdict
 from datetime import datetime
 
@@ -115,7 +116,6 @@ def collect_files(iterator):
             else:
                 # Directory component
                 currdir = currdir[1][component]
-
     return ret
 
 
@@ -131,70 +131,124 @@ def humansize(size):
     else:
         return "{:.4f} TiB".format(size / 2 ** 40)
 
-
-def generate_output(tree, directory=''):
+def get_output(directory, fname):
     output_dir = os.path.join(args.output, directory)
-    output_file = os.path.join(output_dir, 'index.html')
+    output_file = os.path.join(output_dir, fname)
     try:
         os.makedirs(output_dir)
     except:
         pass
+    return (output_dir, output_file)
 
-    files, directories = tree
-    rows = []
-    rowtpl = config.get('output', {}).get('entry_tpl', DEFAULT_ENTRY_TPL)
-    dirtpl = config.get('output', {}).get('directory_tpl', DEFAULT_DIR_TPL)
-    bodytpl = config.get('output', {}).get('body_tpl', DEFAULT_BODY_TPL)
-    skipzero = not bool(config.get('output', {}).get('list_zero_sized', False))
-    base_url = config.get('bucket', {}).get('base_url', '')
-    file_sort_key = config.get('output', {}).get('file_sort_key', 'name')
-    reverse_files = bool(config.get('output', {}).get('reverse_files', False))
 
-    # Generate directory list (as well as listings for deeper directories)
-    for ndir, tree in sorted(directories.items(), key=lambda x: x[0]):
-        path = os.path.join(directory, ndir)
-        dirsize = generate_output(tree, path)
-        if dirsize == 0 and skipzero:
-            continue
-        fmt = {
-            'name': ndir + '/',
-            'link': base_url + '/'.join(['', path.replace(os.sep, '/'), 'index.html']),
-            'size': dirsize
-        }
-        rows.append(dirtpl.format(**fmt))
+def file_url(base, directory, filename):
+    if directory:
+        url = '/'.join([base, directory.replace(os.sep, '/'), filename])
+    else:
+        url = '/'.join([base, filename])
+    # As a precaution if our string concatenation doesn’t cut it
+    return url.replace('//', '/')
 
-    # Generate file list
-    fs = sorted(files, key=lambda x: x[file_sort_key])
-    fs = fs if not reverse_files else reversed(fs)
-    for f in fs:
-        if f['size'] == 0 and not config.get('output', {}).get('list_zero_sized'):
-            continue
-        if directory:
-            url = base_url + '/'.join(['', directory.replace(os.sep, '/'), f['name']])
-        else:
-            url = base_url + f['name']
 
-        fmt = {
-            'name': f['name'],
-            'link': url,
-            'size': f['size'],
-            'humansize': humansize(f['size']),
-            'etag': f['etag'],
-            'storage': f['storage'],
-            'mdate': f['mdate']
-        }
-        rows.append(rowtpl.format(**fmt))
+class HtmlGenerator(object):
+    def __init__(self, htmlconfig={}):
+        self.base_url = config.get('bucket', {}).get('base_url', '')
+        self.rowtpl = htmlconfig.get('entry_tpl', DEFAULT_ENTRY_TPL)
+        self.dirtpl = htmlconfig.get('directory_tpl', DEFAULT_DIR_TPL)
+        self.bodytpl = htmlconfig.get('body_tpl', DEFAULT_BODY_TPL)
+        self.skipzero = not bool(htmlconfig.get('list_zero_sized', False))
+        self.file_sort_key = htmlconfig.get('file_sort_key', 'name')
+        self.reverse_files = bool(htmlconfig.get('reverse_files', False))
 
-    bodyfmt = {
-        'title': 'Directory listing for {}'.format(directory) if directory else 'Directory listing',
-        'style': CSS,
-        'script': JAVASCRIPT,
-        'extrahead': config.get('output', {}).get('extra_head', '')
-    }
-    with open(output_file, 'w') as f:
-        f.write(BASE_TPL.format(listing=bodytpl.format(entries="".join(rows)), **bodyfmt))
+    # Predicate on whether the file should be not listed
+    def skip(self, name, size, is_dir=False):
+        if size == 0 and self.skipzero:
+            return True
+        return False
 
-    return len(files)
+    def run(self, tree, directory=''):
+        (output_dir, output_file) = get_output(directory, 'index.html')
+        files, directories = tree
+        rows = []
+        # Generate directory list (as well as listings for deeper directories)
+        for dirname, children in sorted(directories.items(), key=lambda x: x[0]):
+            path = os.path.join(directory, dirname)
+            childcount = self.run(children, path)
+            if self.skip(dirname, childcount, True):
+                continue
+            rows.append(self.dirtpl.format(**{
+                'name': dirname + '/',
+                'link': file_url(self.base_url, path, 'index.html'),
+                'size': childcount
+            }))
+        # Generate file list, appropriately sorted
+        fs = sorted(files, key=lambda x: x[self.file_sort_key])
+        fs = fs if not self.reverse_files else reversed(fs)
+        for f in fs:
+            if self.skip(f['name'], f['size']):
+                continue
+            rows.append(self.rowtpl.format(**{
+                'name': f['name'],
+                'link': file_url(self.base_url, directory, f['name']),
+                'size': f['size'],
+                'humansize': humansize(f['size']),
+                'etag': f['etag'],
+                'storage': f['storage'],
+                'mdate': f['mdate']
+            }))
+        # Write the output
+        extrahead = config.get('output', {}).get('extra_head', '')
+        title = 'Directory listing of {}'.format(directory) if directory else 'Directory listing'
+        with open(output_file, 'w') as f:
+            f.write(BASE_TPL.format(
+                listing=self.bodytpl.format(entries="".join(rows)),
+                title=title,
+                extrahead=extrahead,
+                style=CSS,
+                script=JAVASCRIPT
+            ))
+        return len(files)
+
+
+class JsonGenerator(object):
+    def __init__(self, jsonconfig={}):
+        self.base_url = config.get('bucket', {}).get('base_url', '')
+        self.pretty = jsonconfig.get('pretty', False)
+
+    def run(self, tree):
+        (output_dir, output_file) = get_output('', 'index.json')
+        with open(output_file, 'w') as f:
+            json.dump(self._run(tree), f, indent=4 if self.pretty else 0)
+
+    def _run(self, tree, d=''):
+        files, directories = tree
+        output = {'fs': [], 'ds': []}
+        for dirname, children in directories.items():
+            path = os.path.join(d, dirname)
+            output['ds'].append({
+                'name': dirname,
+                'index_link': file_url(self.base_url, path, 'index.html'),
+                'children': self._run(children)
+            })
+        for f in files:
+            output['fs'].append({
+                'name': f['name'],
+                'link': file_url(self.base_url, d, f['name']),
+                'size': f['size'],
+                'etag': f['etag'],
+                'storage': f['storage'],
+                'mdate': f['mdate'].isoformat()
+            })
+        return output
+
+
+class TSVGenerator(object):
+    def __init__(self, tsvconfig={}):
+        self.base_url = config.get('bucket', {}).get('base_url', '')
+
+    def run(self, tree):
+        pass
+
 
 if __name__ == "__main__":
     argp = argparse.ArgumentParser("s3-listing-generator",
@@ -233,3 +287,16 @@ if __name__ == "__main__":
 
     tree = collect_files(bucket.list(prefix=prefix))
     generate_output(tree)
+
+    # Generate the requested output formats
+    outputs = config.get('output', {})
+    targets = {
+        'html': HtmlGenerator,
+        'json': JsonGenerator
+    }
+    for name in outputs.keys():
+        tp = config['output'][name].get('type', None)
+        klass = targets.get(tp, None)
+        if tp is None or klass is None:
+            panic('Unknown type for section output.{}'.format(name))
+        klass(config['output'][name]).run(tree)
