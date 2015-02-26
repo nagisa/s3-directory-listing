@@ -313,7 +313,6 @@ if __name__ == "__main__":
               .format(name))
 
     tree = collect_files(bucket.list(prefix=prefix))
-    generate_output(tree)
 
     # Generate the requested output formats
     outputs = config.get('output', {})
