@@ -18,7 +18,7 @@ import toml
 DEFAULT_ENTRY_TPL = """<tr>
     <td class="filename"><a href="{link}">{name}</a></td>
     <td class="size">{humansize}</td>
-    <td class="modification">{mdate:%Y-%m-%d %H:%M}</td>
+    <td class="modification">{mdate:%Y-%m-%d %H:%M} UTC</td>
 </tr>"""
 
 # Default template for each directory displayed. Variables used are {name}, {link} and {size} which
