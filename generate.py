@@ -35,7 +35,7 @@ DEFAULT_BODY_TPL = """<table id="listing">
 <th class="name">Name</th>
 <th>Size</th>
 <th>Last modified</th>
-</tk>
+</tr>
 {entries}
 </table>"""
 
